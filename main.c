@@ -1,21 +1,6 @@
-#include <sys/mman.h>
 #include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
 #include <time.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <wchar.h>
-#include <locale.h>
-#include <stdarg.h>
-#include <pty.h>
-#include <assert.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/select.h>
-#include <pwd.h>
-#include <poll.h>
 
 #include "ogl.c"
 
@@ -110,7 +95,7 @@ int main(void) {
 						continue;
 					}
 					wz = wz_t;
-					printf("%d, %d\n", wz.x, wz.y);
+					/* printf("%d, %d\n", wz.x, wz.y); */
 					glUniform2ui(glGetUniformLocation(prog, "Dim"), wz.x, wz.y);
 					glScissor(0, 0, wz.x, wz.y);
 					glEnable(GL_SCISSOR_TEST);

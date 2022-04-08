@@ -5,7 +5,6 @@ layout(location = 0) out vec4 color;
 
 #define NUM_BALLS 10
 layout(location = 1) uniform vec3 Balls[NUM_BALLS];
-
 uniform uint M;
 uniform uvec2 Dim;
 
