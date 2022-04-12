@@ -75,7 +75,7 @@ int main(void) {
 	}
 
 	/* float vertices[] = { -1., 3, -1., -1., 3., -1 }; */
-	int n = 100;
+	int n = 2000;
 	float *vr = cv(n);
 	unsigned int *tvr = cib(n);
 
@@ -111,11 +111,11 @@ int main(void) {
 
 	Vec wz =  winsize(d, win);
 
-#define NUM_BALLS 1
+#define NUM_BALLS 25
 	float *p = malloc(NUM_BALLS * 3 * sizeof(*p));
 	float *v = malloc(NUM_BALLS * 2 * sizeof(*v));
 
-#define M 1
+#define M 25
 	srand(time(0));
 	for (int i = 0; i < NUM_BALLS; ++i) {
 		p[i * 3] = rand1();
@@ -126,11 +126,10 @@ int main(void) {
 		v[i * 2 + 1] = rand2();
 	}
 
-	glUniform3fv(1, NUM_BALLS, p);
+	glUniform3fv(glGetUniformLocation(prog, "Balls"), NUM_BALLS, p);
 	glUniform1ui(glGetUniformLocation(prog, "M"), M);
 	glUniform2ui(glGetUniformLocation(prog, "Dim"), wz.x, wz.y);
 	glEnable(GL_MULTISAMPLE);
-
 	XEvent xev;
 
 	struct timeval tv;
@@ -170,7 +169,7 @@ int main(void) {
 			p[i * 3 + 1] += vy * dt;
 
 #define X(p, pv, x) \
-			if (((p > 1.) && (pv > 0)) || ((p < 0) && (pv < 0))) {\
+			if (((p > 1.) && (pv > 0)) || ((p < -1) && (pv < 0))) {\
 				v[i * 2 + x] = -pv;\
 			}
 
@@ -178,7 +177,7 @@ int main(void) {
 			X(p[i * 3 + 1], vy, 1);
 			/* printf("%lf, %lf, %lf, %lf, %lf\n", dt, p[i * 3], p[i * 3 + 1], v[i * 2], v[i * 2 + 1]); */
 		}
-		glUniform3fv(1, NUM_BALLS, p);
+		glUniform3fv(glGetUniformLocation(prog, "Balls"), NUM_BALLS, p);
 
 		glDrawElements(GL_TRIANGLES, n * n * 2 * 3, GL_UNSIGNED_INT, NULL);
 		glXSwapBuffers(d, win);

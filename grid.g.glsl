@@ -3,11 +3,12 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
 
 void main(void) {
-	bool x = false;
+	int x = 0;
 	for (int i = 0; i < 3; i++) {
-		x = x || (gl_in[0].gl_Position.z <= 0.5);
+		/* x += int(gl_in[0].gl_Position.z < 0.3 && gl_in[0].gl_Position.z > 0.29 ); */
+		x += int(gl_in[0].gl_Position.z < 0.3);
 	}
-	if (x) {
+	if (x <= 2) {
 		gl_Position = gl_in[0].gl_Position.xyww;
 		gl_Position.z = 0;
 		EmitVertex();
@@ -17,6 +18,6 @@ void main(void) {
 		gl_Position = gl_in[2].gl_Position.xyww;
 		gl_Position.z = 0;
 		EmitVertex();
+		EndPrimitive();
 	}
-	EndPrimitive();
 }
