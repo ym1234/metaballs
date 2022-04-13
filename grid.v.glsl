@@ -1,7 +1,10 @@
 #version 430
+
+#define MAX_BALLS 1000
+
 layout (location = 0) in vec2 aPos;
-#define NUM_BALLS 25
-uniform vec3 Balls[NUM_BALLS];
+uniform vec3 Balls[MAX_BALLS];
+uniform uint NUM_BALLS;
 uniform uint M;
 uniform uvec2 Dim;
 

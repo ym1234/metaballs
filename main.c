@@ -75,7 +75,7 @@ int main(void) {
 	}
 
 	/* float vertices[] = { -1., 3, -1., -1., 3., -1 }; */
-	int n = 2000;
+	int n = 200;
 	float *vr = cv(n);
 	unsigned int *tvr = cib(n);
 
@@ -111,11 +111,11 @@ int main(void) {
 
 	Vec wz =  winsize(d, win);
 
-#define NUM_BALLS 25
+#define NUM_BALLS 10
 	float *p = malloc(NUM_BALLS * 3 * sizeof(*p));
 	float *v = malloc(NUM_BALLS * 2 * sizeof(*v));
 
-#define M 25
+#define M 100
 	srand(time(0));
 	for (int i = 0; i < NUM_BALLS; ++i) {
 		p[i * 3] = rand1();
@@ -127,6 +127,7 @@ int main(void) {
 	}
 
 	glUniform3fv(glGetUniformLocation(prog, "Balls"), NUM_BALLS, p);
+	glUniform1ui(glGetUniformLocation(prog, "NUM_BALLS"), NUM_BALLS);
 	glUniform1ui(glGetUniformLocation(prog, "M"), M);
 	glUniform2ui(glGetUniformLocation(prog, "Dim"), wz.x, wz.y);
 	glEnable(GL_MULTISAMPLE);
@@ -137,7 +138,7 @@ int main(void) {
 	double time = tv.tv_sec * 1000.0 + tv.tv_usec / 1000000.0;
 	double dt = 0;
 
-	/* glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	while (1) {
 		while (XPending(d)) {
 			XNextEvent(d, &xev);
