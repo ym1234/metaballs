@@ -138,6 +138,9 @@ int main(void) {
 	double time = tv.tv_sec * 1000.0 + tv.tv_usec / 1000000.0;
 	double dt = 0;
 
+	char framerate[100] = {0};
+	XSetForeground(d, DefaultGC(d, 0), 0x0000ff00); // red
+
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	while (1) {
 		while (XPending(d)) {
@@ -163,7 +166,6 @@ int main(void) {
 			}
 		}
 
-		glClear(GL_COLOR_BUFFER_BIT);
 		for (int i = 0; i < NUM_BALLS; ++i) {
 			double vx = v[i * 2], vy = v[i * 2 + 1];
 			p[i * 3] += vx * dt;
@@ -180,13 +182,17 @@ int main(void) {
 		}
 		glUniform3fv(glGetUniformLocation(prog, "Balls"), NUM_BALLS, p);
 
+		glClear(GL_COLOR_BUFFER_BIT);
 		glDrawElements(GL_TRIANGLES, n * n * 2 * 3, GL_UNSIGNED_INT, NULL);
 		glXSwapBuffers(d, win);
 		glFinish();
+		XSync(d, 0);
 
 		gettimeofday(&tv, NULL);
 		double time2 = tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0;
 		dt = (time2 - time) / 1000;
 		time = time2;
+
+		XDrawString(d, win, DefaultGC(d, 0), 100, 100, framerate, snprintf(framerate, 100, "Framerate: %f", 1 / dt));
 	}
 }
