@@ -75,7 +75,7 @@ int main(void) {
 	}
 
 	/* float vertices[] = { -1., 3, -1., -1., 3., -1 }; */
-	int n = 200;
+	int n = 30;
 	float *vr = cv(n);
 	unsigned int *tvr = cib(n);
 
@@ -111,16 +111,17 @@ int main(void) {
 
 	Vec wz =  winsize(d, win);
 
-#define NUM_BALLS 10
+#define NUM_BALLS 1
 	float *p = malloc(NUM_BALLS * 3 * sizeof(*p));
 	float *v = malloc(NUM_BALLS * 2 * sizeof(*v));
 
-#define M 100
+#define M 500
 	srand(time(0));
 	for (int i = 0; i < NUM_BALLS; ++i) {
 		p[i * 3] = rand1();
 		p[i * 3 + 1] = rand1();
-		p[i * 3 + 2] = rand1() * M;
+		/* p[i * 3 + 2] = rand1() * M; */
+		p[i * 3 + 2] = M;
 
 		v[i * 2] = rand2();
 		v[i * 2 + 1] = rand2();
@@ -141,6 +142,7 @@ int main(void) {
 	char framerate[100] = {0};
 	XSetForeground(d, DefaultGC(d, 0), 0x0000ff00); // red
 
+	/* glPointSize(10); */
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	while (1) {
 		while (XPending(d)) {
@@ -157,8 +159,7 @@ int main(void) {
 						continue;
 					}
 					wz = wz_t;
-					/* printf("%d, %d\n", wz.x, wz.y); */
-					/* glUniform2ui(glGetUniformLocation(prog, "Dim"), wz.x, wz.y); */
+					glUniform2ui(glGetUniformLocation(prog, "Dim"), wz.x, wz.y);
 					glScissor(0, 0, wz.x, wz.y);
 					glEnable(GL_SCISSOR_TEST);
 					glViewport(0, 0, wz.x, wz.y);
@@ -168,6 +169,7 @@ int main(void) {
 
 		for (int i = 0; i < NUM_BALLS; ++i) {
 			double vx = v[i * 2], vy = v[i * 2 + 1];
+			dt = dt * 0.1;
 			p[i * 3] += vx * dt;
 			p[i * 3 + 1] += vy * dt;
 
@@ -178,7 +180,6 @@ int main(void) {
 
 			X(p[i * 3], vx, 0);
 			X(p[i * 3 + 1], vy, 1);
-			/* printf("%lf, %lf, %lf, %lf, %lf\n", dt, p[i * 3], p[i * 3 + 1], v[i * 2], v[i * 2 + 1]); */
 		}
 		glUniform3fv(glGetUniformLocation(prog, "Balls"), NUM_BALLS, p);
 
@@ -194,5 +195,6 @@ int main(void) {
 		time = time2;
 
 		XDrawString(d, win, DefaultGC(d, 0), 100, 100, framerate, snprintf(framerate, 100, "Framerate: %f", 1 / dt));
+		XSync(d, 0);
 	}
 }
