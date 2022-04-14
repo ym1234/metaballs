@@ -75,7 +75,7 @@ int main(void) {
 	}
 
 	/* float vertices[] = { -1., 3, -1., -1., 3., -1 }; */
-	int n = 30;
+	int n = 200;
 	float *vr = cv(n);
 	unsigned int *tvr = cib(n);
 
@@ -111,17 +111,17 @@ int main(void) {
 
 	Vec wz =  winsize(d, win);
 
-#define NUM_BALLS 1
+#define NUM_BALLS 30
 	float *p = malloc(NUM_BALLS * 3 * sizeof(*p));
 	float *v = malloc(NUM_BALLS * 2 * sizeof(*v));
 
-#define M 500
+#define M 50
 	srand(time(0));
 	for (int i = 0; i < NUM_BALLS; ++i) {
 		p[i * 3] = rand1();
 		p[i * 3 + 1] = rand1();
-		/* p[i * 3 + 2] = rand1() * M; */
-		p[i * 3 + 2] = M;
+		p[i * 3 + 2] = rand1() * M;
+		/* p[i * 3 + 2] = M; */
 
 		v[i * 2] = rand2();
 		v[i * 2 + 1] = rand2();
@@ -142,8 +142,11 @@ int main(void) {
 	char framerate[100] = {0};
 	XSetForeground(d, DefaultGC(d, 0), 0x0000ff00); // red
 
-	/* glPointSize(10); */
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPointSize(10);
+	GLenum modes[3] = {GL_POINT, GL_LINE, GL_FILL };
+	int stop = 0;
+	int step = 0;
+	int mdx = 2;
 	while (1) {
 		while (XPending(d)) {
 			XNextEvent(d, &xev);
@@ -164,12 +167,28 @@ int main(void) {
 					glEnable(GL_SCISSOR_TEST);
 					glViewport(0, 0, wz.x, wz.y);
 				} break;
+				case KeyPress: {
+					unsigned int keycode = xev.xkey.keycode;
+					if (keycode == 59) {
+						mdx = (mdx + 1) % 3;
+					} else if (keycode == 60) {
+						mdx = (mdx + 2) % 3;
+					} else if (keycode == 44 || keycode == 65) {
+						stop = !stop;
+					} else if (keycode == 47) {
+						step = 1;
+					} else if (keycode == 46) {
+						step = -1;
+					} else {
+						printf("unhandled keycode: %d\n", keycode);
+					}
+				} break;
 			}
 		}
-
+		if (stop) dt = 0;
+		if (step) dt = step * 0.1; step = 0;
 		for (int i = 0; i < NUM_BALLS; ++i) {
 			double vx = v[i * 2], vy = v[i * 2 + 1];
-			dt = dt * 0.1;
 			p[i * 3] += vx * dt;
 			p[i * 3 + 1] += vy * dt;
 
@@ -181,9 +200,10 @@ int main(void) {
 			X(p[i * 3], vx, 0);
 			X(p[i * 3 + 1], vy, 1);
 		}
-		glUniform3fv(glGetUniformLocation(prog, "Balls"), NUM_BALLS, p);
 
+		glUniform3fv(glGetUniformLocation(prog, "Balls"), NUM_BALLS, p);
 		glClear(GL_COLOR_BUFFER_BIT);
+		glPolygonMode(GL_FRONT_AND_BACK, modes[mdx]);
 		glDrawElements(GL_TRIANGLES, n * n * 2 * 3, GL_UNSIGNED_INT, NULL);
 		glXSwapBuffers(d, win);
 		glFinish();
