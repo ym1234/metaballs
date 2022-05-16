@@ -9,7 +9,7 @@ float u(float a, float b, float c) {
 }
 
 void main(void) {
-	color1 = vec4(0.2,0.2,0.2,1);
+	color1 = vec4(0, 0, 0, 1);
 	int x = 0;
 
 	int y = 0;
@@ -32,8 +32,10 @@ void main(void) {
 	EndPrimitive();
 
 
+	/* color1 = gl_in[y].gl_Position; */
+	color1 = vec4(1, 1, 1, 1);
 	if (x == 1) {
-		color1 = vec4(0, 0.5, 1, 1);
+		/* color1 = vec4(0, 0.5, 1, 1); */
 		vec4 v = gl_in[y].gl_Position;
 		vec4 f = gl_in[int(mod((y - 1), 3))].gl_Position;
 		vec4 s = gl_in[(y + 1) % 3].gl_Position;
@@ -46,7 +48,7 @@ void main(void) {
 		EmitVertex();
 		EndPrimitive();
 	} else if (x == 2) {
-		color1 = vec4(0, 0.2, 0.6, 1);
+		/* color1 = vec4(0, 0.2, 0.6, 1); */
 		vec4 v = gl_in[y].gl_Position;
 		vec4 k = gl_in[o].gl_Position;
 		vec4 f = gl_in[a].gl_Position;
@@ -64,7 +66,7 @@ void main(void) {
 		EmitVertex();
 		EndPrimitive();
 	} else if (x == 3)  {
-		color1 = vec4(0, 0.5, 0.5, 1);
+		/* color1 = vec4(0, 0.5, 0.5, 1); */
 		for (int i = 0; i < 3; i++) {
 			gl_Position = gl_in[i].gl_Position * vec4(1, 1, 0, 1);
 			EmitVertex();

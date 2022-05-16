@@ -23,6 +23,11 @@ float rand2(void) {
 	return rand1() - 0.5;
 }
 
+long long get_time() {
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return ts.tv_sec * 1e9 + ts.tv_nsec;
+}
 
 unsigned int *cib(int n) {
 	unsigned int *v = calloc(n * n * 2 * 3, sizeof(unsigned int));
@@ -75,7 +80,7 @@ int main(void) {
 	}
 
 	/* float vertices[] = { -1., 3, -1., -1., 3., -1 }; */
-	int n = 200;
+	int n = 100;
 	float *vr = cv(n);
 	unsigned int *tvr = cib(n);
 
@@ -111,11 +116,11 @@ int main(void) {
 
 	Vec wz =  winsize(d, win);
 
-#define NUM_BALLS 30
+#define NUM_BALLS 20
 	float *p = malloc(NUM_BALLS * 3 * sizeof(*p));
 	float *v = malloc(NUM_BALLS * 2 * sizeof(*v));
 
-#define M 50
+#define M 100
 	srand(time(0));
 	for (int i = 0; i < NUM_BALLS; ++i) {
 		p[i * 3] = rand1();
@@ -131,19 +136,17 @@ int main(void) {
 	glUniform1ui(glGetUniformLocation(prog, "NUM_BALLS"), NUM_BALLS);
 	glUniform1ui(glGetUniformLocation(prog, "M"), M);
 	glUniform2ui(glGetUniformLocation(prog, "Dim"), wz.x, wz.y);
-	glEnable(GL_MULTISAMPLE);
 	XEvent xev;
 
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	double time = tv.tv_sec * 1000.0 + tv.tv_usec / 1000000.0;
+	long long time = get_time();
 	double dt = 0;
 
-	char framerate[100] = {0};
-	XSetForeground(d, DefaultGC(d, 0), 0x0000ff00); // red
+	XSetForeground(d, DefaultGC(d, 0), 0x00ffff00); // green
+	XSetBackground(d, DefaultGC(d, 0), 0x00000000); // green
 
 	glPointSize(10);
-	GLenum modes[3] = {GL_POINT, GL_LINE, GL_FILL };
+	GLenum modes[3] = { GL_POINT, GL_LINE, GL_FILL };
+	char *modes_s[3] = { "POINT", "LINE", "FILL" };
 	int stop = 0;
 	int step = 0;
 	int mdx = 2;
@@ -169,52 +172,51 @@ int main(void) {
 				} break;
 				case KeyPress: {
 					unsigned int keycode = xev.xkey.keycode;
-					if (keycode == 59) {
-						mdx = (mdx + 1) % 3;
-					} else if (keycode == 60) {
-						mdx = (mdx + 2) % 3;
-					} else if (keycode == 44 || keycode == 65) {
-						stop = !stop;
-					} else if (keycode == 47) {
-						step = 1;
-					} else if (keycode == 46) {
-						step = -1;
-					} else {
-						printf("unhandled keycode: %d\n", keycode);
+					switch (keycode) {
+						case 59: mdx = (mdx + 1) % 3; glPolygonMode(GL_FRONT_AND_BACK, modes[mdx]); break;
+						case 60: mdx = (mdx + 2) % 3; glPolygonMode(GL_FRONT_AND_BACK, modes[mdx]); break;
+						case 44:
+						case 65: stop = !stop; break;
+						case 46: stop = 1; step =  1; break;
+						case 47: stop = 1; step = -1; break;
+						default: printf("unhandled keycode: %d\n", keycode); break;
+
 					}
 				} break;
 			}
 		}
+
 		if (stop) dt = 0;
-		if (step) dt = step * 0.1; step = 0;
+		if (step) dt = step * 0.01; step = 0;
 		for (int i = 0; i < NUM_BALLS; ++i) {
-			double vx = v[i * 2], vy = v[i * 2 + 1];
-			p[i * 3] += vx * dt;
-			p[i * 3 + 1] += vy * dt;
+#define X(x) \
+			do {\
+				float pp = p[i * 3 + x], pv = v[i * 2 + x];\
+				p[i * 3 + x] += pv * dt; \
+				if ((pp > 1. && dt * pv > 0) || (pp < -1 && dt * pv < 0)) {\
+					v[i * 2 + x] = -pv;\
+				}\
+			} while(0);
 
-#define X(p, pv, x) \
-			if (((p > 1.) && (pv > 0)) || ((p < -1) && (pv < 0))) {\
-				v[i * 2 + x] = -pv;\
-			}
-
-			X(p[i * 3], vx, 0);
-			X(p[i * 3 + 1], vy, 1);
+			X(0);
+			X(1);
 		}
 
 		glUniform3fv(glGetUniformLocation(prog, "Balls"), NUM_BALLS, p);
 		glClear(GL_COLOR_BUFFER_BIT);
-		glPolygonMode(GL_FRONT_AND_BACK, modes[mdx]);
 		glDrawElements(GL_TRIANGLES, n * n * 2 * 3, GL_UNSIGNED_INT, NULL);
-		glXSwapBuffers(d, win);
-		glFinish();
-		XSync(d, 0);
 
-		gettimeofday(&tv, NULL);
-		double time2 = tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0;
-		dt = (time2 - time) / 1000;
+		glFinish();
+		glXSwapBuffers(d, win);
+
+		long long time2 = get_time();
+		dt = (time2 - time) / 1e9;
 		time = time2;
 
-		XDrawString(d, win, DefaultGC(d, 0), 100, 100, framerate, snprintf(framerate, 100, "Framerate: %f", 1 / dt));
+		char framerate[100] = {0};
+		XDrawImageString(d, win, DefaultGC(d, 0), 0, 100, framerate, snprintf(framerate, 100, "Framerate: %f", 1 / dt));
+		XDrawImageString(d, win, DefaultGC(d, 0), 0, 115, framerate, snprintf(framerate, 100, "Mode: GL_%s", modes_s[mdx]));
+		XDrawImageString(d, win, DefaultGC(d, 0), 0, 130, framerate, snprintf(framerate, 100, "Stop: %s", stop ? "true" : "false"));
 		XSync(d, 0);
 	}
 }
